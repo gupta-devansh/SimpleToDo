@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleToDo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .create-list {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        .create-list input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        .create-list button {
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .create-list button:hover {
+            background: #0056b3;
+        }
+        .lists-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .list-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .list-card h2 {
+            margin-bottom: 15px;
+            color: #333;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .delete-list {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .delete-list:hover {
+            background: #c82333;
+        }
+        .list-content {
+            display: none;
+        }
+        .list-content.active {
+            display: block;
+        }
+        .add-task {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .add-task input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+        .tasks-list {
+            list-style: none;
+        }
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 12px;
+            background: #f8f9fa;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            cursor: move;
+            user-select: none;
+            gap: 8px;
+        }
+        .task-item.dragging {
+            opacity: 0.5;
+        }
+        .task-item.drag-over {
+            border-top: 3px solid #007bff;
+        }
+        .task-number {
+            font-weight: bold;
+            color: #666;
+            min-width: 30px;
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+        .task-text {
+            flex: 1;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            min-width: 0;
+        }
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .delete-task {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .delete-task:hover {
+            background: #c82333;
+        }
+        .back-button {
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .back-button:hover {
+            background: #5a6268;
+        }
+        .home-screen, .list-screen {
+            display: none;
+        }
+        .home-screen.active, .list-screen.active {
+            display: block;
+        }
+        .list-preview {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .list-preview:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .list-preview-content {
+            flex: 1;
+        }
+        .list-preview h3 {
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .list-preview p {
+            color: #666;
+            font-size: 14px;
+        }
+        .delete-list-home {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .delete-list-home:hover {
+            background: #c82333;
+        }
+        .color-picker {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            align-items: center;
+        }
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: transform 0.2s;
+        }
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        .color-option.selected {
+            border-color: #000;
+        }
+        .color-label {
+            font-size: 14px;
+            color: #666;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="home-screen active">
+        <h1>Lists</h1>
+        <div class="create-list">
+            <input type="text" id="newListName" placeholder="Enter list name..." />
+            <button onclick="createList()">Create List</button>
+        </div>
+        <div class="color-picker">
+            <span class="color-label">Color:</span>
+            <div class="color-option selected" style="background: #333;" data-color="#333"></div>
+            <div class="color-option" style="background: #dc3545;" data-color="#dc3545"></div>
+            <div class="color-option" style="background: #007bff;" data-color="#007bff"></div>
+            <div class="color-option" style="background: #28a745;" data-color="#28a745"></div>
+            <div class="color-option" style="background: #ff6b6b;" data-color="#ff6b6b"></div>
+            <div class="color-option" style="background: #9b59b6;" data-color="#9b59b6"></div>
+            <div class="color-option" style="background: #f39c12;" data-color="#f39c12"></div>
+            <div class="color-option" style="background: #e91e63;" data-color="#e91e63"></div>
+        </div>
+        <div class="lists-container" id="listsContainer"></div>
+    </div>
+
+    <div class="list-screen">
+        <button class="back-button" onclick="goHome()">← Back to Lists</button>
+        <div id="currentList"></div>
+    </div>
+
+    <script>
+        let lists = {};
+        let currentListId = null;
+        let draggedElement = null;
+        let selectedColor = '#333';
+
+        function loadData() {
+            const saved = JSON.parse(localStorage.getItem('todoLists') || '{}');
+            lists = saved;
+            renderHome();
+            setupColorPicker();
+        }
+
+        function saveData() {
+            localStorage.setItem('todoLists', JSON.stringify(lists));
+        }
+
+        function setupColorPicker() {
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+                    this.classList.add('selected');
+                    selectedColor = this.dataset.color;
+                });
+            });
+        }
+
+        function createList() {
+            const input = document.getElementById('newListName');
+            const name = input.value.trim();
+            if (!name) return;
+            
+            const id = Date.now().toString();
+            lists[id] = {
+                name: name,
+                tasks: [],
+                completed: [],
+                color: selectedColor
+            };
+            
+            input.value = '';
+            saveData();
+            renderHome();
+        }
+
+        function deleteList(id, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            if (confirm('Delete this list?')) {
+                delete lists[id];
+                saveData();
+                renderHome();
+            }
+        }
+
+        function renderHome() {
+            const container = document.getElementById('listsContainer');
+            container.innerHTML = '';
+            
+            Object.keys(lists).forEach(id => {
+                const list = lists[id];
+                const taskCount = list.tasks.length;
+                const completedCount = list.completed.length;
+                const color = list.color || '#333';
+                
+                const card = document.createElement('div');
+                card.className = 'list-preview';
+                card.innerHTML = `
+                    <div class="list-preview-content">
+                        <h3 style="color: ${color};">${list.name}</h3>
+                        <p>${taskCount} active • ${completedCount} completed</p>
+                    </div>
+                    <button class="delete-list-home" data-list-id="${id}">Delete</button>
+                `;
+                
+                card.querySelector('.list-preview-content').onclick = () => openList(id);
+                
+                container.appendChild(card);
+            });
+            
+            // Add event listeners to all delete buttons after rendering
+            document.querySelectorAll('.delete-list-home').forEach(btn => {
+                btn.onclick = function(e) {
+                    e.stopPropagation();
+                    const listId = this.getAttribute('data-list-id');
+                    if (confirm('Delete this list?')) {
+                        delete lists[listId];
+                        saveData();
+                        renderHome();
+                    }
+                };
+            });
+        }
+
+        function openList(id) {
+            currentListId = id;
+            document.querySelector('.home-screen').classList.remove('active');
+            document.querySelector('.list-screen').classList.add('active');
+            renderList();
+        }
+
+        function goHome() {
+            document.querySelector('.list-screen').classList.remove('active');
+            document.querySelector('.home-screen').classList.add('active');
+            currentListId = null;
+            renderHome();
+        }
+
+        function renderList() {
+            const list = lists[currentListId];
+            const color = list.color || '#333';
+            const container = document.getElementById('currentList');
+            
+            container.innerHTML = `
+                <h1 style="color: ${color}; font-weight: bold;">${list.name}</h1>
+                <div class="add-task">
+                    <input type="text" id="taskInput" placeholder="Type a task and press Enter..." />
+                </div>
+                <div style="margin-bottom: 30px;">
+                    <h3 style="margin-bottom: 10px;">Tasks</h3>
+                    <ul class="tasks-list" id="tasksList"></ul>
+                </div>
+                <div>
+                    <h3 style="margin-bottom: 10px;">COMPLETED</h3>
+                    <ul class="tasks-list" id="completedList"></ul>
+                </div>
+            `;
+
+            document.getElementById('taskInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTask();
+            });
+
+            renderTasks();
+        }
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            if (!text) return;
+            
+            lists[currentListId].tasks.unshift(text);
+            input.value = '';
+            saveData();
+            renderTasks();
+        }
+
+        function completeTask(index) {
+            const list = lists[currentListId];
+            const task = list.tasks.splice(index, 1)[0];
+            list.completed.push(task);
+            saveData();
+            renderTasks();
+        }
+
+        function deleteTask(index) {
+            const list = lists[currentListId];
+            list.tasks.splice(index, 1);
+            saveData();
+            renderTasks();
+        }
+
+        function deleteCompletedTask(index) {
+            const list = lists[currentListId];
+            list.completed.splice(index, 1);
+            saveData();
+            renderTasks();
+        }
+
+        function renderTasks() {
+            const list = lists[currentListId];
+            const tasksList = document.getElementById('tasksList');
+            const completedList = document.getElementById('completedList');
+            
+            tasksList.innerHTML = '';
+            list.tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                li.draggable = true;
+                li.innerHTML = `
+                    <span class="task-number">${index + 1}.</span>
+                    <span class="task-text">${task}</span>
+                    <input type="checkbox" class="task-checkbox" />
+                    <button class="delete-task">Delete</button>
+                `;
+                
+                li.querySelector('.task-checkbox').addEventListener('change', () => completeTask(index));
+                li.querySelector('.delete-task').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteTask(index);
+                });
+                
+                li.addEventListener('dragstart', handleDragStart);
+                li.addEventListener('dragend', handleDragEnd);
+                li.addEventListener('dragover', handleDragOver);
+                li.addEventListener('drop', handleDrop);
+                li.dataset.index = index;
+                
+                tasksList.appendChild(li);
+            });
+            
+            completedList.innerHTML = '';
+            list.completed.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                li.style.opacity = '0.6';
+                li.innerHTML = `
+                    <span class="task-number">${index + 1}.</span>
+                    <span class="task-text">${task}</span>
+                    <button class="delete-task">Delete</button>
+                `;
+                
+                li.querySelector('.delete-task').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteCompletedTask(index);
+                });
+                
+                completedList.appendChild(li);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.task-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            
+            const draggingItem = document.querySelector('.dragging');
+            if (this !== draggingItem && this.classList.contains('task-item')) {
+                this.classList.add('drag-over');
+            }
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (draggedElement !== this) {
+                const fromIndex = parseInt(draggedElement.dataset.index);
+                const toIndex = parseInt(this.dataset.index);
+                
+                const list = lists[currentListId];
+                const [movedTask] = list.tasks.splice(fromIndex, 1);
+                list.tasks.splice(toIndex, 0, movedTask);
+                
+                saveData();
+                renderTasks();
+            }
+            
+            return false;
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>
